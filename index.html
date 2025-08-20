@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Custo/Hora para Fisioterapeutas</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Estilo customizado para o corpo da página e a fonte */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+        }
+        /* Efeito de transição para o resultado */
+        #resultado_container p {
+            transition: all 0.3s ease-in-out;
+        }
+        /* Esconde as setas de inputs numéricos */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+        /* Estilo para o foco dos inputs */
+        .custom-focus-ring:focus {
+            --tw-ring-color: #2dd4bf; /* teal-400 */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 bg-gray-50">
+
+    <div class="w-full max-w-3xl mx-auto">
+        
+        <!-- Seção de Instruções e Vídeo -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100 mb-8">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Como Usar a Calculadora</h2>
+                <p class="mt-2 text-lg text-gray-500">Assista ao vídeo abaixo para um guia passo a passo.</p>
+            </div>
+            <!-- Container responsivo para o vídeo -->
+            <div class="aspect-video w-full overflow-hidden rounded-xl shadow-md border border-gray-200">
+                 <iframe class="w-full h-full" src="https://www.youtube.com/embed/f41sZkXPtFI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <!-- Calculadora -->
+        <div class="w-full bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100">
+            <!-- Cabeçalho da Calculadora -->
+            <div class="text-center mb-10">
+                <h1 id="titulo" class="text-3xl md:text-4xl font-bold text-gray-800">Calculadora Financeira</h1>
+                <p id="descricao" class="mt-3 text-lg text-gray-500">Estime o valor mínimo da sua hora e seu ponto de equilíbrio.</p>
+            </div>
+
+            <form id="calculator-form" class="space-y-10">
+
+                <!-- Seção 1: Jornada de Trabalho -->
+                <fieldset id="dados_trabalho" class="space-y-5">
+                    <legend class="text-xl font-semibold text-gray-700 flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>
+                        1. Jornada de Trabalho
+                    </legend>
+                    <div>
+                        <label id="label_dias_semana" class="block text-md font-medium text-gray-600 mb-4">Selecione os dias que você trabalha e informe a quantidade total de horas que você atende por dia:</label>
+                        <div id="dias_semana_container" class="space-y-3">
+                            <!-- Opções de dias e horas geradas dinamicamente -->
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Seção 2: Custos do Negócio -->
+                <fieldset id="dados_financeiros" class="space-y-5">
+                     <legend class="text-xl font-semibold text-gray-700 flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M12 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M2 8h20"></path><path d="M16 2v4h4"></path></svg>
+                        2. Custos Mensais
+                    </legend>
+                    <p class="text-md text-gray-500 !mt-2">Informe os valores mensais para cada categoria de custo. Campos não preenchidos serão considerados como zero.</p>
+                    <div id="cost-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                        <!-- Campos de custo gerados dinamicamente -->
+                    </div>
+                </fieldset>
+                
+                <!-- Botão de Ação -->
+                <div>
+                    <button type="button" id="botao_calcular" class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold py-4 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-teal-300 transition-all duration-300 transform hover:scale-[1.02]">
+                        Calcular
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Seção de Resultado -->
+            <div id="resultado_container" class="mt-10 pt-8 border-t-2 border-dashed border-gray-200 hidden">
+                <!-- Custo Mínimo -->
+                <div class="text-center py-6">
+                    <h2 class="text-xl font-medium text-gray-600">Custo mínimo por hora</h2>
+                    <p class="mt-2 text-6xl font-bold text-teal-600">
+                        <span class="text-4xl text-gray-500 font-semibold mr-1">R$</span><span id="resultado_valor_custo">0,00</span>
+                    </p>
+                    <div class="mt-4 text-left p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-md mx-auto">
+                        <p class="text-gray-600"><strong class="text-gray-800">O que é o Custo Mínimo por Hora?</strong> Este é o valor que sua hora de trabalho custa para o negócio, considerando todas as despesas. Cobrar abaixo deste valor resultará em prejuízo.</p>
+                    </div>
+                </div>
+
+                <!-- Ponto de Equilíbrio -->
+                <div class="text-center border-t border-gray-200 pt-8">
+                     <h2 class="text-2xl font-semibold text-gray-700 mb-2">Ponto de Equilíbrio</h2>
+                    <div>
+                        <h3 class="text-xl font-medium text-gray-600">Faturamento Necessário</h3>
+                        <p class="mt-2 text-6xl font-bold text-teal-600">
+                            <span class="text-4xl text-gray-500 font-semibold mr-1">R$</span><span id="resultado_valor_pe_faturamento">0,00</span>
+                        </p>
+                    </div>
+                    <div class="mt-4 text-left p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-md mx-auto">
+                         <p class="text-gray-600"><strong class="text-gray-800">O que é o Ponto de Equilíbrio?</strong> É o faturamento mensal necessário para que suas receitas se igualem às suas despesas. A partir deste valor, todo faturamento adicional se torna lucro.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DADOS E CONFIGURAÇÃO INICIAL ---
+            const DIAS_DA_SEMANA = [
+                { id: "seg", valor: "Segunda-feira" }, { id: "ter", valor: "Terça-feira" },
+                { id: "qua", valor: "Quarta-feira" }, { id: "qui", valor: "Quinta-feira" },
+                { id: "sex", valor: "Sexta-feira" }, { id: "sab", valor: "Sábado" },
+                { id: "dom", valor: "Domingo" }
+            ];
+
+            const ITENS_DE_CUSTO = [
+                { id: "aluguel", label: "Aluguel" },
+                { id: "condominio", label: "Condomínio" },
+                { id: "iptu", label: "IPTU" },
+                { id: "luz", label: "Luz" },
+                { id: "agua", label: "Água" },
+                { id: "internet", label: "Telefone e Internet" },
+                { id: "impostos", label: "Impostos" },
+                { id: "seu_salario", label: "Seu Salário Mensal" },
+                { id: "salario_equipe", label: "Salário Mensal da Sua Equipe (Se Houver)" },
+                { id: "contabilidade", label: "Contabilidade" },
+                { id: "marketing", label: "Invest. em Marketing" },
+                { id: "limpeza", label: "Faxina/Mat. de Limpeza" },
+                { id: "cursos", label: "Cursos e Aperfeiçoamentos" },
+                { id: "outros", label: "Demais Custos" }
+            ];
+
+            const diasSemanaContainer = document.getElementById('dias_semana_container');
+            const costItemsContainer = document.getElementById('cost-items-container');
+
+            // --- FUNÇÕES ---
+
+            /** Popula o container com os checkboxes e inputs de horas para cada dia. */
+            function popularDiasDaSemana() {
+                DIAS_DA_SEMANA.forEach(dia => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-gray-200 transition-colors duration-200';
+                    const labelContainer = document.createElement('div');
+                    labelContainer.className = 'flex items-center';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = dia.id;
+                    checkbox.name = 'dias_trabalho';
+                    checkbox.value = dia.id;
+                    checkbox.className = 'dia-checkbox h-5 w-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer';
+                    const label = document.createElement('label');
+                    label.htmlFor = dia.id;
+                    label.textContent = dia.valor;
+                    label.className = 'ml-3 text-md text-gray-700 cursor-pointer select-none';
+                    labelContainer.appendChild(checkbox);
+                    labelContainer.appendChild(label);
+                    const inputContainer = document.createElement('div');
+                    inputContainer.className = 'mt-2 sm:mt-0 sm:ml-4';
+                    const inputHoras = document.createElement('input');
+                    inputHoras.type = 'number';
+                    inputHoras.id = `horas_${dia.id}`;
+                    inputHoras.className = 'horas-dia-input hidden w-full sm:w-32 px-3 py-1.5 text-gray-700 bg-gray-50 border border-gray-300 rounded-md focus:border-teal-500 focus:ring-teal-500 focus:ring-opacity-50 custom-focus-ring';
+                    inputHoras.placeholder = 'Horas no dia';
+                    inputHoras.min = '0';
+                    inputContainer.appendChild(inputHoras);
+                    wrapper.appendChild(labelContainer);
+                    wrapper.appendChild(inputContainer);
+                    diasSemanaContainer.appendChild(wrapper);
+                    checkbox.addEventListener('change', () => {
+                        if (checkbox.checked) {
+                            inputHoras.classList.remove('hidden');
+                            wrapper.classList.add('bg-teal-50', 'border-teal-200');
+                        } else {
+                            inputHoras.classList.add('hidden');
+                            inputHoras.value = '';
+                            wrapper.classList.remove('bg-teal-50', 'border-teal-200');
+                        }
+                    });
+                });
+            }
+
+            /** Popula o container com os campos de custo. */
+            function popularItensDeCusto() {
+                ITENS_DE_CUSTO.forEach(item => {
+                    const div = document.createElement('div');
+                    const label = document.createElement('label');
+                    label.htmlFor = item.id;
+                    label.textContent = item.label;
+                    label.className = 'block text-md font-medium text-gray-600';
+                    const inputContainer = document.createElement('div');
+                    inputContainer.className = 'relative mt-1.5';
+                    const prefix = document.createElement('div');
+                    prefix.className = 'pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3';
+                    prefix.innerHTML = '<span class="text-gray-400">R$</span>';
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.id = item.id;
+                    input.name = item.id;
+                    input.className = 'cost-input block w-full pl-10 pr-4 py-2 text-gray-800 bg-gray-50 border border-gray-300 rounded-md focus:border-teal-500 focus:ring-teal-500 focus:ring-opacity-50 custom-focus-ring';
+                    input.placeholder = '0,00';
+                    input.min = '0';
+                    input.step = '0.01';
+                    inputContainer.appendChild(prefix);
+                    inputContainer.appendChild(input);
+                    div.appendChild(label);
+                    div.appendChild(inputContainer);
+                    costItemsContainer.appendChild(div);
+                });
+            }
+
+            /** Realiza o cálculo do custo por hora e do ponto de equilíbrio. */
+            function calcularResultados() {
+                // 1. Somar horas da semana
+                const hourInputs = document.querySelectorAll('.horas-dia-input');
+                let totalHorasSemanais = 0;
+                hourInputs.forEach(input => {
+                    if (!input.classList.contains('hidden')) {
+                        totalHorasSemanais += parseFloat(input.value) || 0;
+                    }
+                });
+                
+                // 2. Somar custos mensais
+                const costInputs = document.querySelectorAll('.cost-input');
+                let custoFixoMensal = 0;
+                costInputs.forEach(input => {
+                    custoFixoMensal += parseFloat(input.value) || 0;
+                });
+
+                // 3. Calcular Custo Mínimo por Hora
+                const semanasPorMes = 4.33; 
+                const totalHorasMensais = totalHorasSemanais * semanasPorMes;
+                let custoPorHora = 0;
+                if (totalHorasMensais > 0) {
+                    custoPorHora = custoFixoMensal / totalHorasMensais;
+                }
+
+                // 4. Exibir resultados
+                const resultadoContainer = document.getElementById('resultado_container');
+                resultadoContainer.classList.remove('hidden');
+
+                const resultadoValorCustoEl = document.getElementById('resultado_valor_custo');
+                resultadoValorCustoEl.textContent = custoPorHora.toFixed(2).replace('.', ',');
+
+                const resultadoValorPeFaturamentoEl = document.getElementById('resultado_valor_pe_faturamento');
+                resultadoValorPeFaturamentoEl.textContent = custoFixoMensal.toFixed(2).replace('.', ',');
+
+                // Animação sutil para destacar a atualização
+                [resultadoValorCustoEl.parentElement, resultadoValorPeFaturamentoEl.parentElement].forEach(el => {
+                    el.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        el.style.transform = 'scale(1)';
+                    }, 300);
+                });
+            }
+
+            // --- INICIALIZAÇÃO E EVENT LISTENERS ---
+            popularDiasDaSemana();
+            popularItensDeCusto();
+            document.getElementById('botao_calcular').addEventListener('click', calcularResultados);
+        });
+    </script>
+
+</body>
+</html>
